@@ -1,0 +1,18 @@
+---
+
+### 2. 🛡️ firestore.rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Colección donde se guardan las rachas
+    match /user_streaks/{userId} {
+      // Permite leer y escribir si tienes el ID del usuario
+      // (Para producción, añade autenticación: request.auth != null)
+      allow read, write: if true;
+    }
+    
+  }
+}
