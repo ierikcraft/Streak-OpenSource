@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Racha</title>
+    <style>
+        /* Diseño Oscuro Moderno */
+        body { background: #000; color: white; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+        
+        .nav { width: 100%; max-width: 400px; text-align: left; margin-bottom: 40px; }
+        .back { color: #666; text-decoration: none; font-size: 1.5rem; }
+
+        .flame { font-size: 6rem; filter: drop-shadow(0 0 20px orange); }
+        .count { font-size: 5rem; font-weight: 800; margin: 0; line-height: 1; }
+        .label { color: #888; text-transform: uppercase; letter-spacing: 2px; }
+
+        .bar-container { width: 100%; max-width: 300px; background: #333; height: 10px; border-radius: 5px; margin-top: 40px; overflow: hidden; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, orange, red); width: 0%; transition: 1s; }
+        
+        .reward-box { border: 1px solid #333; background: #111; padding: 20px; border-radius: 15px; margin-top: 40px; width: 100%; max-width: 300px; text-align: center; }
+        .reward-box.unlocked { border-color: orange; box-shadow: 0 0 20px rgba(255, 165, 0, 0.2); }
+        
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; background: #333; color: #666; }
+        .btn.active { background: white; color: black; }
+    </style>
+</head>
+<body>
+
+    <div class="nav"><a href="index.html" class="back">✕</a></div>
+
+    <div class="flame">🔥</div>
+    <div id="num" class="count">--</div>
+    <div class="label">Días Seguidos</div>
+
+    <div class="bar-container">
+        <div id="fill" class="bar-fill"></div>
+    </div>
+    <div style="margin-top: 5px; color: #666; font-size: 0.9rem;">Meta: 50 días</div>
+
+    <div id="box" class="reward-box">
+        <div style="font-size: 2rem;">🎁</div>
+        <h3>Premio Especial</h3>
+        <p style="color: #888; font-size: 0.9rem;">Desbloquea contenido exclusivo.</p>
+        <button id="btn" class="btn" disabled>Bloqueado</button>
+    </div>
+
+    <script type="module">
+        import { StreakManager } from './js/streak-manager.js';
+
+        // Configuración (debe coincidir con index.html)
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROJECT.firebaseapp.com",
+            projectId: "TU_PROJECT_ID"
+        };
+
+        const sm = new StreakManager(firebaseConfig);
+        const userId = "demo_user_001";
+
+        async function init() {
+            const data = await sm.getStreakData(userId);
+            const streak = data.currentStreak || 0;
+
+            // Render
+            document.getElementById('num').innerText = streak;
+            document.getElementById('fill').style.width = Math.min((streak/50)*100, 100) + "%";
+
+            const btn = document.getElementById('btn');
+            const box = document.getElementById('box');
+
+            if(data.claimedReward) {
+                btn.innerText = "Reclamado";
+            } else if (streak >= 50) {
+                box.classList.add('unlocked');
+                btn.classList.add('active');
+                btn.disabled = false;
+                btn.innerText = "Reclamar Recompensa";
+                btn.onclick = async () => {
+                    if(confirm("¿Reclamar premio?")) {
+                        await sm.claimReward(userId);
+                        alert("¡Premio canjeado!");
+                        location.reload();
+                    }
+                }
+            } else {
+                btn.innerText = `Faltan ${50 - streak} días`;
+            }
+        }
+        init();
+    </script>
+</body>
+</html>
